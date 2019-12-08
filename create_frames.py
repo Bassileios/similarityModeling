@@ -8,7 +8,7 @@ def create_frames(vidcap,folder):
 	while success:
 		cv2.imwrite(folder+"/frame%d.jpg" % count, image)     # save frame as JPEG file
 		success,image = vidcap.read()
-		print 'Read a new frame: ', success
+		print('Read a new frame: ', success)
 		count += 1
 
 # Main Procedure
@@ -18,4 +18,5 @@ vid_names = ['Muppets-03-04-03.avi','Muppets-02-04-04.avi','Muppets-02-01-01.avi
 videos = [0]*len(vid_names)
 for i in range(len(vid_names)):
 	videos[i] = cv2.VideoCapture(vid_names[i])
+	create_frames(videos[i],vid_names[i].split('.')[0])
 
