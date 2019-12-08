@@ -27,11 +27,15 @@ frames = [38682,38707,38499]
 # Labels are written in time stamp intervals
 # Movies are made with 25 frames per second
 
-bound = parse('m_03_04_03_kermit_labels')
+bound = parse('m_03_04_03_pig_labels') # CHANGE FILE TO LABELS ONCE DONE
+
+doc = open('Muppets_03_04_03_pig.txt','w') # CHANGE ACCORDINGLY
 
 label = 0
 count = 0
-for i in range(frames[3]):
+for i in range(frames[2]): # CHANGE ACCORDINGLY
 	if bound[count][0] == i:
 		label = bound[count][1]
-	
+	doc.write("{}\t{}\n".format(i,label))
+
+doc.close()
