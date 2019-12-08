@@ -33,7 +33,7 @@ def find_green(img):
 
 # 1. Load in Data
 # Data = DB with picture names and labels
-data = load_data('material/data_base.csv')
+data = open('material/Muppets_03_04_03_kermit.txt','r')
 # data is now an array of pictures with labels
 # This needs to get transformed to a matrix of n x (k+1) where k is the batch size
 BATCH_SIZE = 5
@@ -49,6 +49,8 @@ for i in range(n):
 		green[j] = find_green(data[i][j])
 		# - Find Textur occurrances in pictures
 		text[j] = find_texture(data[i][j])
+		# - Find Motion Flow
+		motion[j] = cv.optical_flow(data[i][j])
 
 
 
