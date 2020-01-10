@@ -1,10 +1,5 @@
 # Folders with uncompressed frames
-Muppets-02-01-01/
-Muppets-03-04-03/
-Muppets-02-04-04/
-Muppets-02-01-01.avi
-Muppets-03-04-03.avi
-Muppets-02-04-04.avi
+data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -110,3 +105,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# User-specific stuff
+*/.idea/
+# CMake
+cmake-build-*/
