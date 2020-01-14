@@ -11,7 +11,7 @@ def create_model():
     x = Dense(512, activation='relu')(x)
     x = Dense(512, activation='relu')(x)
     x = Dense(256, activation='relu')(x)
-    preds = Dense(3, activation='softmax')(x)
+    preds = Dense(2, activation='softmax')(x)
 
     model = Model(inputs=base_model.input, outputs=preds)
 
