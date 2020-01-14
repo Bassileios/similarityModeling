@@ -19,9 +19,10 @@
 # 5. Train Model
 
 
-import opencv-python as cv
+import cv2
 import pandas as pd
 import numpy as np
+import mahotas as mt
 from PIL import Image
 
 def find_flesh(img):
@@ -32,30 +33,37 @@ def find_flesh(img):
 	return result
 
 
+def find_texture(img):
+	text = mt.features.haralick(img)
+	mean = text.mean(axis=0)
+	return mean
 
-def prepare(file_path):
+
+def prepare(file_path, prefix):
 	with open(file_path, 'r') as file:
+		n = 6 #sum(1 for line in file)
 		data = [('',0)]*n
 		line = file.readline().strip().split()
-		i = 0
-		while len(line) == 2:
-			data[i] = (line[0], int(line[1]))
+		for i in range(n):
+			data[i] = (prefix.append(line[0]), int(line[1]))
+			line = file.readline().strip().split()
 		return data
 		
 
 
 def main():
 	# Data = DB with picture names and labels
-	data = prepare('m_03_04_03_pig_labels') # data is now an array of pictures with labels
+	data = prepare('m_03_04_03_pig_labels', 'Muppets-03-04-03/') # data is now an array of pictures with labels
 
 	BATCH_SIZE = 5 # Number of frames that are looked at simulateneously
 
 	# Optical Flow parameters
+	# taken from https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_video/py_lucas_kanade/py_lucas_kanade.html
 	lk_params = dict( winSize  = (15,15),
                   maxLevel = 2,
-                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)) # taken from https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_video/py_lucas_kanade/py_lucas_kanade.html
+                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)) 
 
-	n = len(data)	
+	n = 6#len(data)	
 
 	# Start with creation of database
 	for i in range(n-BATCH_SIZE):
@@ -63,19 +71,19 @@ def main():
 		flesh = [0]*BATCH_SIZE
 		text = [0]*BATCH_SIZE
 		motion = [0]*BATCH_SIZE
-		old_gray = cv2.cvtColor(data[i], cv2.COLOR_BGR2GRAY)
+		old = cv2.cvtColor(data[i], cv2.COLOR_BGR2GRAY)
 		tracking = cv2.goodFeaturesToTrack(old_gray, mask = None, **feature_params)
 
 		# Each frame also calculates the next BATCH_SIZE frames as well
 		for j in range(BATCH_SIZE):
-			frame_gray = cv2.cvtColor(data[i+j], cv2.COLOR_BGR2GRAY)
+			gray = cv2.cvtColor(data[i+j], cv2.COLOR_BGR2GRAY)
 			# - Find number of green pixels
-			flesh[j] = find_flesh(data[i][j])
+			flesh[j] = find_flesh(data[i+j])
 			# - Find Textur occurrances in pictures
-			text[j] = find_texture(data[i][j])
+			text[j] = find_texture(gray)
 			# - Find Motion Flow
 			motion[j], st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, tracking, None, **lk_params)
-			old_gray = frame_gray.copy()
+			old = gray.copy()
 
 
 
