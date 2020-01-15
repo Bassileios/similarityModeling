@@ -59,6 +59,11 @@ def add_line(file_name, line):
 			if i != len(line)-1: string += '\t'
 		string += '\n'
 		file.write(string)
+
+
+def check_status(file_name):
+	with open(file_name, 'r') as file:
+		return sum(1 for line in file)
 		
 
 
@@ -77,15 +82,16 @@ def main():
 	# ShiTomasi corner detection
 	corner_params = dict(maxCorners = 100, qualityLevel = 0.3, minDistance = 7, blockSize = 7 )
 
+	start = check_status('Muppets-03-04-03.csv')
 	n = len(data)
+
 	quarter = int(n/4)
 	half = int(n/2)
 	tquarter = int(3*n/4)
 
 	print('Starting the feature extraction')
 	# Start with creation of database
-	for i in range(n-BATCH_SIZE):
-
+	for i in range(start, n-BATCH_SIZE):
 		if i == quarter: print('25% Done!')
 		elif i == half: print('50% Done!')
 		elif i == tquarter: print('75% Done!')
@@ -93,41 +99,46 @@ def main():
 		# Next we want to work with the data
 		flesh = [0]*BATCH_SIZE
 		text = [0]*(BATCH_SIZE*len(textures))
-		motion = [0]*BATCH_SIZE
+		motion = []
 		image = cv2.imread(data[i][0])
 		label = data[i+BATCH_SIZE][1]
 		old = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 		tracking = cv2.goodFeaturesToTrack(old, mask = None, **corner_params)
 		tex_count = 0
+		none_flag = False
 
 		# Each frame also calculates the next BATCH_SIZE frames as well
 		for j in range(BATCH_SIZE):
-			gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+			new = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 			# - Find number of flesh pixels
 			flesh[j] = find_flesh(image)
 
 			# - Find Textur occurrances in pictures
-			texture = find_texture(gray)
+			texture = find_texture(new)
 			for t in textures:
 				text[tex_count] = texture[t]
 				tex_count += 1
 			
 			# - Find Motion Flow
-			if isinstance(tracking,np.ndarray):
-				points, st, err = cv2.calcOpticalFlowPyrLK(old, gray, tracking, None, **of_params)
-				motion[j] = points[st==1]
-				old = gray.copy()
-				tracking = motion[j].reshape(-1,1,2)
+			if isinstance(tracking,np.ndarray) and not none_flag:
+				points, st, err = cv2.calcOpticalFlowPyrLK(old, new, tracking, None, **of_params)
+				if isinstance(points,type(None)): none_flag = True
+				else:
+					points = points[st==1]
+					motion.append(points)
+					old = new.copy()
+					tracking = points.reshape(-1,1,2)
 
 			# - Next picture
 			if j != BATCH_SIZE-1: image = cv2.imread(data[i+j+1][0])
 
 		# Analyze the flow of movement
 		movement = [0]*(BATCH_SIZE-1)
-		if isinstance(tracking,np.ndarray):
+		if isinstance(tracking,np.ndarray) and np.shape(motion[0])[0] != 0:
 			for m in range(len(motion[0][0])):
 				for j in range(BATCH_SIZE-1):
+					if np.shape(motion[j+1])[0] == 0: break
 					diff_x = motion[j][m][0] - motion[j+1][m][0]
 					diff_y = motion[j][m][1] - motion[j+1][m][1]
 					movement[j] = math.sqrt(diff_x*diff_x + diff_y*diff_y)
@@ -199,7 +210,8 @@ def analyse_mp():
 
 #analyse_mp()
 
-main()
+print(check_status('Muppets-03-04-03.csv'))
 
+main()
 
 
