@@ -40,20 +40,34 @@ def find_texture(img):
 
 def prepare(file_path, prefix, suffix):
 	with open(file_path, 'r') as file:
-		n = 10 #sum(1 for line in file)
-		data = [('',0)]*n
+		#n = sum(1 for line in file)
+		data = []
 		line = file.readline().strip().split()
-		for i in range(16000): line = file.readline().strip().split()
-		for i in range(n):
-			data[i] = (prefix +line[0]+suffix, int(line[1]))
+		#for i in range(16000): line = file.readline().strip().split()
+		count = 0
+		while len(line) == 2:
+			data.append((prefix +line[0]+suffix, int(line[1])))
 			line = file.readline().strip().split()
 		return data
+
+
+def add_line(file_name, line):
+	with open(file_name, 'a') as file:
+		string = ''
+		for i in range(len(line)):
+			string += str(line[i])
+			if i != len(line)-1: string += '\t'
+		string += '\n'
+		file.write(string)
 		
 
 
 def main():
+	print('Reading in the data')
 	# Data = DB with picture names and labels
 	data = prepare('Muppets_03_04_03_pig.txt', 'Muppets-03-04-03/', '.jpg') # data is now an array of pictures with labels
+	#data = prepare('Muppets_02_01_01_pig.txt', 'Muppets-02-01-01/', '.jpg') # data is now an array of pictures with labels
+	#data = prepare('Muppets_02_04_04_pig.txt', 'Muppets-02-04-04/', '.jpg') # data is now an array of pictures with labels
 
 	BATCH_SIZE = 5 # Number of frames that are looked at simulateneously
 	textures = [2,4,7,8,10,12]
@@ -63,10 +77,19 @@ def main():
 	# ShiTomasi corner detection
 	corner_params = dict(maxCorners = 100, qualityLevel = 0.3, minDistance = 7, blockSize = 7 )
 
-	n = 10#len(data)	
+	n = len(data)
+	quarter = int(n/4)
+	half = int(n/2)
+	tquarter = int(3*n/4)
 
+	print('Starting the feature extraction')
 	# Start with creation of database
 	for i in range(n-BATCH_SIZE):
+
+		if i == quarter: print('25% Done!')
+		elif i == half: print('50% Done!')
+		elif i == tquarter: print('75% Done!')
+
 		# Next we want to work with the data
 		flesh = [0]*BATCH_SIZE
 		text = [0]*(BATCH_SIZE*len(textures))
@@ -76,11 +99,14 @@ def main():
 		old = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 		tracking = cv2.goodFeaturesToTrack(old, mask = None, **corner_params)
 		tex_count = 0
+
 		# Each frame also calculates the next BATCH_SIZE frames as well
 		for j in range(BATCH_SIZE):
 			gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
 			# - Find number of flesh pixels
 			flesh[j] = find_flesh(image)
+
 			# - Find Textur occurrances in pictures
 			texture = find_texture(gray)
 			for t in textures:
@@ -93,6 +119,8 @@ def main():
 				motion[j] = points[st==1]
 				old = gray.copy()
 				tracking = motion[j].reshape(-1,1,2)
+
+			# - Next picture
 			if j != BATCH_SIZE-1: image = cv2.imread(data[i+j+1][0])
 
 		# Analyze the flow of movement
@@ -104,7 +132,14 @@ def main():
 					diff_y = motion[j][m][1] - motion[j+1][m][1]
 					movement[j] = math.sqrt(diff_x*diff_x + diff_y*diff_y)
 
-		print('Flesh:',flesh,'text:',text,'motion:',movement, 'Label:', label)
+		#print('Flesh:',flesh,'text:',text,'motion:',movement, 'Label:', label)
+		line = [data[i+BATCH_SIZE][0]] + flesh + text + movement
+		line.append(label)
+		add_line('Muppets-03-04-03.csv', line)
+		#add_line('Muppets-02-01-01.csv', line)
+		#add_line('Muppets-02-04-04.csv', line)
+
+	print('Successfully created the database!')
 
 
 
