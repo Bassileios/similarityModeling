@@ -27,9 +27,9 @@ frames = [38682,38707,38499]
 # Labels are written in time stamp intervals
 # Movies are made with 25 frames per second
 
-bound = parse('m_03_04_03_kermit_labels') # CHANGE FILE TO LABELS ONCE DONE
+bound = parse('m_02_04_04_pig_labels') # CHANGE FILE TO LABELS ONCE DONE
 
-doc = open('Muppets_03_04_03_kermit.txt','w') # CHANGE ACCORDINGLY
+doc = open('Muppets_02_04_04_pig.txt','w') # CHANGE ACCORDINGLY
 
 label = 0
 count = 0
