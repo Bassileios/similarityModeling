@@ -82,7 +82,7 @@ def main():
 	# ShiTomasi corner detection
 	corner_params = dict(maxCorners = 100, qualityLevel = 0.3, minDistance = 7, blockSize = 7 )
 
-	start = check_status('Muppets-03-04-03.csv')
+	start = 0#check_status('Muppets-03-04-03.csv')
 	n = len(data)
 
 	quarter = int(n/4)
@@ -91,7 +91,7 @@ def main():
 
 	print('Starting the feature extraction')
 	# Start with creation of database
-	for i in range(start, n-BATCH_SIZE, 10):
+	for i in range(start, n-BATCH_SIZE):
 		if i == quarter: print('25% Done!')
 		elif i == half: print('50% Done!')
 		elif i == tquarter: print('75% Done!')
@@ -345,7 +345,7 @@ def analyse_mp():
 
 #analyse_mp()
 
-print(check_status('Muppets-03-04-03.csv'))
+#print(check_status('Muppets-03-04-03.csv'))
 
 main()
 
