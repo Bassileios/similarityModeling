@@ -1,8 +1,8 @@
 # Similarity Modeling
-Implementation of Similarity Modeling Project 2 by Nikolaus Funk and Bassel Mahmud
+Implementation of Similarity Modeling Project 2 by Nikolaus Funk and Bassel Mahmoud
 
 ## Problem
-Detection of the pigs in the given video files
+Detection of the pigs in the given video files using both audio and visual features.
 
 ## Approach
 In this project classical feature enigneering approach was used for detection of the pigs.
@@ -16,7 +16,7 @@ In this project classical feature enigneering approach was used for detection of
 - Moviepy.editor
 - Pydub
 
-## USAGE
+## Usage
 This Project is split into
 - create_frames.py: Extracts the frames from the video data
 - create_labels.py: Based on the label and timestamp lists (m_02_01_01_pig_labels, m_02_04_04_pig_labels, m_03_04_03_pig_labels) it creates a mapping of frames and labels
@@ -25,7 +25,9 @@ This Project is split into
 - build.py: Runs all the methods from above to set the database up. WARNING: THIS MAY TAKE OVER 80 HOURS
 - classify_data.py: Trains three different classifiers on the final database and creates a statistic for the purpose of analyzing the results
 
-## Techniques Used
+For the purpose of classifying running classify_data.py should be sufficient, as the other files are only dedicated to the creation of the database that is already handed in together with the implementation.
+
+## Techniques and Experiments
 ### Video Features
 We created a batch of 5 frames to be analyzed as one sample, like a sliding window. For each Frame we calculated:
 - Number of pixels that are colored like a pig
@@ -43,8 +45,7 @@ We wanted to try out different classifiers for this project and ended up with:
 - kNN
 - Decision Tree
 
-All from the SciKit-Learn library. Training and testing was done with 10-folded cross-validation. The clear winner was the decision tree with an accuracy of 92%, a precision of 79% and recall of 79%. A big problem for the classification was the very small number of occurrances of pigs inside the movies, which led to some experiments with the SVM that had an accuracy of 82%, which sounded great but a recall of only 1%. In this case the SVM simply assigned 0 to almost all of the samples, which would not be visible as the accuracy was still very high. Similarly kNN produced solid accuracies with very low values of recall. In this algorithm we used a k of 5, since eventhough the sample size was very high, using too many neighbors would mean that it is more likely to get disturbed by noise from the negative samples.
+All from the SciKit-Learn library. Training and testing was done with 10-folded cross-validation. The clear winner was the decision tree with an accuracy of 92%, a precision of 79% and recall of 79%. A big problem for the classification was the very small number of occurrances of pigs inside the movies, which led to some experiments with the SVM that had an accuracy of 82%, which sounded great but a recall of only 1%. In this case the SVM simply assigned 0 to almost all of the samples, which would not be visible as the accuracy was still very high. Similarly kNN produced solid accuracies with very low values of recall. In this algorithm we used a k of 5, since eventhough the sample size was very high, using too many neighbors would mean that it is more likely to get disturbed by noise from the negative samples. A detailed statistic can be found with 150 entries for accuracy, precision and recall for each model in SVM.csv, kNN.csv and DecTree.csv.
 
-
-
- 
+## Conclusion
+The very good result with the decision tree model was very exciting for us, since it was hard for us to see whether our tests and analyses were correct and would lead to a sufficiently good model. The most tedious part of our work was definitely the experiments with different textures and colors, as well as the error handling of the optical flow method. While it was definitely the most interesting part of this project, finding out how speech recognition works was by far the hardest to get a grasp on.

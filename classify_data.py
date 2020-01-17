@@ -4,6 +4,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 import random
 import numpy as np
+import warnings
 
 
 db = ['Muppets-03-04-03-final.csv','Muppets-02-01-01-final.csv','Muppets-02-04-04-final.csv']
@@ -130,7 +131,7 @@ def main():
 	print('Finished')
 	return
 
-
+warnings.filterwarnings("ignore")
 main()
 
 
