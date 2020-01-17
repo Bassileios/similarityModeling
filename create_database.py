@@ -1,29 +1,11 @@
-
-
-# Plan
-# 1. Daten
-# 2. OpenCV herunterladen
-# 3. Techniken
-	# Farbe: OpenCV -> Color Histogram
-	# Textur: OpenCV -> Filter (?)
-	# Stimme: ???
-	# Bewegungen: OpenCV -> Optical Flow
-	# Umriss: ???
-# 4. Erzeuge aus Video Frames
-	# Aus Gruppen von 5 Frames [x-4:x]
-	# Anzahl rosa Pixel
-	# Anzahl gefundener Muster
-	# Bewegungsdifferential -> check
-	# PCA der Stimme
-# 5. Train Model
-
-
 import cv2
 import pandas as pd
 import numpy as np
 import mahotas as mt
 import math
 
+
+# Finds the Number of pixels in the Picture of Flesh-like Color
 def find_flesh(img):
 	sought = [[58,95,147],[59,96,148],[88,118,173],[89,119,174],[90,120,175],[91,121,176],[92,122,177],[93,123,178],[94,124,179],[97,122,178],[109,141,194],[110,142,195],[111,143,196],[112,144,197],[113,145,198],[114,146,199],[115,147,200],[116,148,201],[117,149,202],[118,150,203],[119,151,204],[147,191,254],[148,192,255],[150,194,255],[152,196,255]]
 	result = 0
@@ -32,12 +14,14 @@ def find_flesh(img):
 	return result
 
 
+# Applies the Haralick Texture Detection Method
 def find_texture(img):
 	text = mt.features.haralick(img)
 	mean = text.mean(axis=0)
 	return mean
 
 
+# Reads in the Labels and Frame Names
 def prepare(file_path, prefix, suffix):
 	with open(file_path, 'r') as file:
 		#n = sum(1 for line in file)
@@ -51,6 +35,7 @@ def prepare(file_path, prefix, suffix):
 		return data
 
 
+# Adds one Sample to the Database
 def add_line(file_name, line):
 	with open(file_name, 'a') as file:
 		string = ''
@@ -59,15 +44,19 @@ def add_line(file_name, line):
 			if i != len(line)-1: string += '\t'
 		string += '\n'
 		file.write(string)
+	return
 
 
+# If the Creation of the database gets interrupted, this method returns the frame that was last worked on
 def check_status(file_name):
 	with open(file_name, 'r') as file:
 		return sum(1 for line in file)
 		
 
 
-def main(num):
+# Main Procedure for Feature Extraction of the Pictures
+# 5 Frames are concurrently read in and processed
+def build_db(num):
 	print('Reading in the data')
 	# Data = DB with picture names and labels
 	db = ['Muppets_03_04_03_pig.txt','Muppets_02_01_01_pig.txt','Muppets_02_04_04_pig.txt']
@@ -151,15 +140,44 @@ def main(num):
 		add_line(target[num], line)
 
 	print('Successfully created the database!')
+	return
 
 
 
+#########################
+# UTILITY and DEBUGGING #
+#########################
+
+# Helper Method
+# There was an issue with the labels, so we had to reapply them to the DB instead of recalculating everything
+def fix_dbs():
+	print('Fixing Procedure')
+	target = ['Muppets-03-04-03.csv', 'Muppets-02-01-01.csv', 'Muppets-02-04-04.csv']
+	new_target = ['Muppets-03-04-03-fixed.csv', 'Muppets-02-01-01-fixed.csv', 'Muppets-02-04-04-fixed.csv']
+	db = ['Muppets-03-04-03_pig.txt','Muppets-02-01-01_pig.txt','Muppets-02-04-04_pig.txt']
+	
+	for d in range(3):
+		X = open(target[d],'r')
+		y = open(db[d],'r')
+		line_x = X.readline().strip().split()
+		line_y = y.readline().strip().split()
+		while len(line_x) > 5:
+			line = line_x[0:len(line_x)-1]
+			line.append(line_y[1])
+			add_line(new_target[d], line)
+			line_x = X.readline().strip().split()
+			line_y = y.readline().strip().split()
+	return
+
+
+# Helper Method
+# Used to see which Features of Color and Texture were the best for Classification
 def analyse_mp():
 	#pictures = ['miss_piggy_cropped_1.jpg','miss_piggy_cropped_2.jpg','miss_piggy_cropped_3.jpg']
 	pictures = ['miss_piggy_color_1.jpg','miss_piggy_color_2.jpg','miss_piggy_color_3.jpg']
 
 	### TESTING PIG TEXTURES ###
-
+	print('Testing Textures')
 	text = [0,0,0]
 	for i in range(3):
 		image = cv2.imread(pictures[i])
@@ -179,6 +197,7 @@ def analyse_mp():
 	#print(text[0])
 
 	### TESTING COLORS OF PIGS ###
+	print('Testing Colors')
 
 	rgb = np.array([[255,255,255]])
 	for i in range(3):
@@ -207,11 +226,13 @@ def analyse_mp():
 	for i in range(len(pruned_col[0])):
 		final += '[{},{},{}],'.format(show[0][i][0],show[0][i][1],show[0][i][2])
 	print(final)
+	return
 
-#analyse_mp()
 
-#print(check_status('Muppets-03-04-03.csv'))
-
-main(2)
-
+# Main Method, creates all the Databases
+def main():
+	for i in range(3):
+		print('Building Database',i)
+		build_db(i)
+	return
 
