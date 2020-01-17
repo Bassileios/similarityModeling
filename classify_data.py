@@ -9,6 +9,7 @@ import numpy as np
 db = ['Muppets-03-04-03-final.csv','Muppets-02-01-01-final.csv','Muppets-02-04-04-final.csv']
 
 
+# Loads the Dataset specified by the Number
 def load_data(num):
 	data = open(db[num], 'r')
 	line = data.readline().strip().split()
@@ -22,6 +23,8 @@ def load_data(num):
 		line = data.readline().strip().split()
 	return res
 
+
+# Splits the Data into Samples and Lables
 def split_data(data):
 	n = len(data)
 	m = len(data[0])
@@ -33,22 +36,16 @@ def split_data(data):
 	return X,y
 
 
-def evaluate(pred, targ):
-	accuracy = 0
-	if len(pred) != len(targ):
-		print('FATAL')
-		return 0
-	for i in range(len(pred)):
-		if pred[i] == targ[i]: accuracy += 1
-	return accuracy/len(pred)
-
-
+# Saves the Results for Accuracy, Precision and Recall
 def safe_results(file_name, acc, prec, rec):
 	with open(file_name, 'w') as file:
+		file.write('Accuracy\tPrecision\tRecall\n')
 		for i in range(len(acc)):
-			file.write('{}\t{}\t{}'.format(acc[i], prec[i], rec[i]))
+			file.write('{}\t{}\t{}\n'.format(acc[i], prec[i], rec[i]))
+	return
 
 
+# Main Procedure, Trains three Models and Creates a Statistic
 def main():
 	print('Loading in Datasets')
 	statistic = ['SVM.csv', 'kNN.csv', 'DecTree.csv']
@@ -56,7 +53,7 @@ def main():
 	data += load_data(1)
 	data += load_data(2)
 
-	validate = 1
+	validate = 150
 	acc_SVM = [0.0]*validate
 	rec_SVM = [0.0]*validate
 	prec_SVM = [0.0]*validate
@@ -73,17 +70,17 @@ def main():
 		print('Iteration', i)
 		random.shuffle(data)
 		X,y = split_data(data)
-		partition = int(0.4*len(X))
+		partition = int(0.3*len(X))
 
 		print('Classify with SVM')
-		support = svm.SVC(gamma='auto')
-		result = cross_validate(support, X[0:int(partition/2)], y[0:int(partition/2)], cv=10, scoring=['accuracy', 'recall', 'precision'])
+		support = svm.LinearSVC(max_iter=1000)
+		result = cross_validate(support, X[0:partition], y[0:partition], cv=10, scoring=['accuracy', 'recall', 'precision'])
 		acc_SVM[i] = np.mean(result['test_accuracy'])
 		prec_SVM[i] = np.mean(result['test_precision'])
 		rec_SVM[i] = np.mean(result['test_recall'])
-		print('Accuracy:\t',acc_SVM[i])
-		print('Precision:\t',prec_SVM[i])
-		print('Recall:\t',rec_SVM[i])
+		print('\tAccuracy:\t',acc_SVM[i])
+		print('\tPrecision:\t',prec_SVM[i])
+		print('\tRecall:\t',rec_SVM[i])
 
 
 		print('Classify with kNN')
@@ -92,9 +89,9 @@ def main():
 		acc_kNN[i] = np.mean(result['test_accuracy'])
 		prec_kNN[i] = np.mean(result['test_precision'])
 		rec_kNN[i] = np.mean(result['test_recall'])
-		print('Accuracy:\t',acc_kNN[i])
-		print('Precision:\t',prec_kNN[i])
-		print('Recall:\t',rec_kNN[i])
+		print('\tAccuracy:\t',acc_kNN[i])
+		print('\tPrecision:\t',prec_kNN[i])
+		print('\tRecall:\t',rec_kNN[i])
 
 
 		print('Classify with DT')
@@ -103,31 +100,34 @@ def main():
 		acc_DT[i] = np.mean(result['test_accuracy'])
 		prec_DT[i] = np.mean(result['test_precision'])
 		rec_DT[i] = np.mean(result['test_recall'])
-		print('Accuracy:\t',acc_DT[i])
-		print('Precision:\t',prec_DT[i])
-		print('Recall:\t',rec_DT[i])
+		print('\tAccuracy:\t',acc_DT[i])
+		print('\tPrecision:\t',prec_DT[i])
+		print('\tRecall:\t',rec_DT[i])
 
-	print('Results from', validate, 'Random Samples of 40% of overall Data:')
+
+	print('')
+	print('')
+	print('Results from', validate, 'Random Samples of 30% of overall Data:')
 	print('\tSVM:')
-	print('\tAccuracy:', np.mean(acc_SVM))
-	print('\tPrecision:', np.mean(prec_SVM))
-	print('\tRecall:', np.mean(rec_SVM))
+	print('\tAccuracy:\t', np.mean(acc_SVM))
+	print('\tPrecision:\t', np.mean(prec_SVM))
+	print('\tRecall:\t', np.mean(rec_SVM))
 	print('')
 	print('\tkNN:')
-	print('\tAccuracy:', np.mean(acc_kNN))
-	print('\tPrecision:', np.mean(prec_kNN))
-	print('\tRecall:', np.mean(rec_kNN))
+	print('\tAccuracy:\t', np.mean(acc_kNN))
+	print('\tPrecision:\t', np.mean(prec_kNN))
+	print('\tRecall:\t', np.mean(rec_kNN))
 	print('')
 	print('\tDecision Tree:')
-	print('\tAccuracy:', np.mean(acc_DT))
-	print('\tPrecision:', np.mean(prec_DT))
-	print('\tRecall:', np.mean(rec_DT))
+	print('\tAccuracy:\t', np.mean(acc_DT))
+	print('\tPrecision:\t', np.mean(prec_DT))
+	print('\tRecall:\t', np.mean(rec_DT))
 
 	print('Saving Statistic')
 	safe_results(statistic[0], acc_SVM, prec_SVM, rec_SVM)
 	safe_results(statistic[1], acc_kNN, prec_kNN, rec_kNN)
 	safe_results(statistic[2], acc_DT, prec_DT, rec_DT)
-	print(Finished)
+	print('Finished')
 	return
 
 

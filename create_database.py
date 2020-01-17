@@ -1,5 +1,4 @@
 import cv2
-import pandas as pd
 import numpy as np
 import mahotas as mt
 import math
@@ -61,7 +60,7 @@ def build_db(num):
 	# Data = DB with picture names and labels
 	db = ['Muppets_03_04_03_pig.txt','Muppets_02_01_01_pig.txt','Muppets_02_04_04_pig.txt']
 	dire = ['Muppets-03-04-03/','Muppets-02-01-01/','Muppets-02-04-04/']
-	target = ['Muppets-03-04-03.csv', 'Muppets-02-01-01.csv', 'Muppets-02-04-04.csv']
+	target = ['Muppets-03-04-03-video.csv', 'Muppets-02-01-01-video.csv', 'Muppets-02-04-04-video.csv']
 
 	data = prepare(db[num], dire[num], '.jpg') # data is now an array of pictures with labels
 
@@ -152,7 +151,7 @@ def build_db(num):
 # There was an issue with the labels, so we had to reapply them to the DB instead of recalculating everything
 def fix_dbs():
 	print('Fixing Procedure')
-	target = ['Muppets-03-04-03.csv', 'Muppets-02-01-01.csv', 'Muppets-02-04-04.csv']
+	target = ['Muppets-03-04-03-video.csv', 'Muppets-02-01-01-video.csv', 'Muppets-02-04-04-video.csv']
 	new_target = ['Muppets-03-04-03-fixed.csv', 'Muppets-02-01-01-fixed.csv', 'Muppets-02-04-04-fixed.csv']
 	db = ['Muppets-03-04-03_pig.txt','Muppets-02-01-01_pig.txt','Muppets-02-04-04_pig.txt']
 	

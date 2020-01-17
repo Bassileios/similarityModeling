@@ -88,7 +88,7 @@ def add_sound():
 	print('Adding the Sound Features to the Database')
 
 	result = ['Muppets-03-04-03-final.csv', 'Muppets-02-01-01-final.csv', 'Muppets-02-04-04-final.csv']
-	databases = ['Muppets-03-04-03.csv', 'Muppets-02-01-01.csv', 'Muppets-02-04-04.csv']
+	databases = ['Muppets-03-04-03-video.csv', 'Muppets-02-01-01-video.csv', 'Muppets-02-04-04-video.csv']
 	sound = ['Muppets-03-04-03-sound.csv', 'Muppets-02-01-01-sound.csv', 'Muppets-02-04-04-sound.csv']
 	db = ['Muppets-03-04-03_pig.txt','Muppets-02-01-01_pig.txt','Muppets-02-04-04_pig.txt']
 	
