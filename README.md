@@ -1,7 +1,8 @@
-# SimilarityModeling
-Implementation of Similarity Modeling Project 2
+# Similarity Modeling
+Implementation of Similarity Modeling Project 2 by Nikolaus Funk and Bassel Mahmud
+
 ## Problem
-- Detection of the pigs in the given video files
+Detection of the pigs in the given video files
 
 ## Approach
 In this project classical feature enigneering approach was used for detection of the pigs.
@@ -30,6 +31,7 @@ We created a batch of 5 frames to be analyzed as one sample, like a sliding wind
 - Number of pixels that are colored like a pig
 - Texture of the image with selected Haralick features
 - Optical flow
+
 For the pig colors we first analyzed pictures of Miss Piggy and selected the 20 most common color values in different lighting environments. This was done in the analyse_mp() method in create_database.py together with an analysis of the Haralick features. Since we wanted to keep the information in the distribution of each value, each feature or set of features occurrs five times in a row. As the usual Haralick features count 13 different features, we selected only 7 that were analyzed experimentally. The optical flow was calculated by first applying edge detection to find points that were easy to track. These points were updated in each iteration. From each picture to the next we calculated the movement vectors and added the absolute length of them. This makes four values to determine how fast a picture is.
 
 ### Audio Features
@@ -40,6 +42,7 @@ We wanted to try out different classifiers for this project and ended up with:
 - Linear SVM
 - kNN
 - Decision Tree
+
 All from the SciKit-Learn library. Training and testing was done with 10-folded cross-validation. The clear winner was the decision tree with an accuracy of 92%, a precision of 79% and recall of 79%. A big problem for the classification was the very small number of occurrances of pigs inside the movies, which led to some experiments with the SVM that had an accuracy of 82%, which sounded great but a recall of only 1%. In this case the SVM simply assigned 0 to almost all of the samples, which would not be visible as the accuracy was still very high. Similarly kNN produced solid accuracies with very low values of recall. In this algorithm we used a k of 5, since eventhough the sample size was very high, using too many neighbors would mean that it is more likely to get disturbed by noise from the negative samples.
 
 
