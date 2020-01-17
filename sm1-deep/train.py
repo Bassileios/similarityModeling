@@ -2,8 +2,11 @@ import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.vgg16 import preprocess_input
+from tensorflow.keras.metrics import Accuracy, Recall, Precision
+import tensorflow.keras.backend as K
 from helpers.generateFrames import generate_all_frames
 from model import create_model
+from model2 import create_model2, finetune_model
 import os
 from datetime import datetime
 import pandas as pd
@@ -13,10 +16,20 @@ from tensorflow.keras.utils import to_categorical
 from skimage.transform import resize  # for resizing images
 from sklearn.model_selection import train_test_split
 import pathlib
+from sklearn.metrics import classification_report
+
 
 
 def MSG(txt):
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S:"), str(txt))
+
+
+MODEL_NAME = 'model-11'
+USE_MODEL2 = True
+BATCH_SIZE = 32
+IMG_HEIGHT = 224
+IMG_WIDTH = 224
+LEARNING_RATE = 0.0001
 
 
 def main():
@@ -32,38 +45,106 @@ def main():
     CLASS_NAMES = np.array([item.name for item in data_dir.glob('*') if item.name != "LICENSE.txt"])
     MSG("classes: " + str(CLASS_NAMES))
 
-    image_generator = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=preprocess_input, rescale=1. / 255)
+    image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1. / 255,
+                                                                      horizontal_flip=True,
+                                                                      validation_split=0.2,
+                                                                      preprocessing_function=preprocess_input)
 
-    BATCH_SIZE = 32
-    IMG_HEIGHT = 224
-    IMG_WIDTH = 224
-    STEPS_PER_EPOCH = np.ceil(image_count / BATCH_SIZE)
+    # image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1. / 255,
+    #                                                                   shear_range=0.2,
+    #                                                                   zoom_range=0.2,
+    #                                                                   horizontal_flip=True,
+    #                                                                   validation_split=0.2,
+    #                                                                   preprocessing_function=preprocess_input)
+
+    STEPS_PER_EPOCH = np.ceil(0.8 * image_count / BATCH_SIZE)
+    VALIDATION_STEPS_PER_EPOCH = np.ceil(0.2 * image_count / BATCH_SIZE)
 
     train_data_gen = image_generator.flow_from_directory(directory=str(data_dir),
                                                          batch_size=BATCH_SIZE,
                                                          shuffle=True,
                                                          target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                         classes=list(CLASS_NAMES))
+                                                         classes=list(CLASS_NAMES),
+                                                         subset='training')
+
+    validation_generator = image_generator.flow_from_directory(directory=str(data_dir),
+                                                               batch_size=BATCH_SIZE,
+                                                               shuffle=True,
+                                                               target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                               classes=list(CLASS_NAMES),
+                                                               subset='validation')
+
     image_batch, label_batch = next(train_data_gen)
     show_batch(image_batch, label_batch, CLASS_NAMES)
 
     # x_train, x_valid, y_train, y_valid = prepare_data()
 
-
     MSG("Creating model")
-    model = create_model()
-    model.pre
+    if USE_MODEL2:
+        model = create_model2()
+    else:
+        model = create_model()
 
     # Adam optimizer
     # loss function will be categorical cross entropy
     # evaluation metric will be accuracy
-    model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    # model.compile(optimizer='Adam',
+    #               loss='categorical_crossentropy',
+    #               metrics=['accuracy'])
+
+    # metrics = ['accuracy', Precision(), Recall()]
+    metrics = ['accuracy', precision, recall, f1_score]
+
+    model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=LEARNING_RATE),
+                  loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+                  metrics=metrics)
     model.summary()
-    #model.fit(x_train, y_train, epochs=100, validation_data=(x_valid, y_valid))
+    MSG(len(model.trainable_variables))
+
+    log_dir = "logs/fit/" + MODEL_NAME + datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+
     model.fit_generator(generator=train_data_gen,
                         steps_per_epoch=STEPS_PER_EPOCH,
-                        epochs=10)
-    model.save('model/model1')
+                        epochs=10,
+                        validation_data=validation_generator,
+                        validation_steps=VALIDATION_STEPS_PER_EPOCH,
+                        callbacks=[tensorboard_callback])
+    model.save('model/' + MODEL_NAME)
+
+    finetune_model(model)
+
+    # model.compile(optimizer='Adam',
+    #               loss='categorical_crossentropy',
+    #               metrics=['accuracy'])
+
+    model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+                  optimizer=tf.keras.optimizers.RMSprop(lr=LEARNING_RATE / 10),
+                  metrics=metrics)
+    model.summary()
+    log_dir = "logs/fit/" + MODEL_NAME + '-tuned' + datetime.now().strftime("%Y%m%d-%H%M%S")
+
+    MSG(len(model.trainable_variables))
+
+    model.fit_generator(generator=train_data_gen,
+                        steps_per_epoch=STEPS_PER_EPOCH,
+                        epochs=10,
+                        validation_data=validation_generator,
+                        validation_steps=VALIDATION_STEPS_PER_EPOCH,
+                        callbacks=[tensorboard_callback])
+
+    model.save('model/' + MODEL_NAME + '-tuned')
+
+    predictions = model.predict_generator(validation_generator, steps=VALIDATION_STEPS_PER_EPOCH)
+    # Get most likely class
+    predicted_classes = np.argmax(predictions, axis=1)
+
+    true_classes = validation_generator.classes
+    class_labels = list(validation_generator.class_indices.keys())
+
+    report = classification_report(true_classes, predicted_classes, target_names=class_labels)
+    print(report)
+
 
 
 def prepare_data():
