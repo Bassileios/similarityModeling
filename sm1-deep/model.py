@@ -1,4 +1,4 @@
-from tensorflow.python.keras.layers import Dense, GlobalAveragePooling2D
+from tensorflow.python.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.models import Model
 from tensorflow.keras.applications.vgg16 import VGG16
 
@@ -9,7 +9,9 @@ def create_model():
     x = base_model.output
     x = GlobalAveragePooling2D()(x)
     x = Dense(512, activation='relu')(x)
+    x = Dropout(0.20)(x)
     x = Dense(512, activation='relu')(x)
+    x = Dropout(0.20)(x)
     x = Dense(256, activation='relu')(x)
     preds = Dense(2, activation='softmax')(x)
 
