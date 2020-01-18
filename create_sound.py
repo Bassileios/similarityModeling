@@ -4,16 +4,16 @@ import librosa as lr
 import numpy as np
 
 # GLOBAL VARIABLES
-vid = ['Muppets-03-04-03','Muppets-02-01-01','Muppets-02-04-04']
-path = ['Muppets-03-04-03-sound/','Muppets-02-01-01-sound/','Muppets-02-04-04-sound/']
-target = ['Muppets-03-04-03-sound.csv','Muppets-02-01-01-sound.csv','Muppets-02-04-04-sound.csv']
-num_frames = [38494,38677,38702]
+sound_vid = ['Muppets-03-04-03','Muppets-02-01-01','Muppets-02-04-04']
+sound_path = ['Muppets-03-04-03-sound/','Muppets-02-01-01-sound/','Muppets-02-04-04-sound/']
+sound_target = ['Muppets-03-04-03-sound.csv','Muppets-02-01-01-sound.csv','Muppets-02-04-04-sound.csv']
+sound_num_frames = [38494,38677,38702]
 
 
 # Extracts the Sound from a Movie File
 def extractor():
 	print('Extracting Sound from .avi file')
-	for v in vid:
+	for v in sound_vid:
 		audio = moviepy.editor.MovieFileClip(v + '.mp3').audio
 		audio.write_audiofile(v + '.mp3')
 	return
@@ -22,7 +22,7 @@ def extractor():
 # Splits the MP3 File into different overlapping Frames of Sound
 def make_sound_frames(num):
 	print('Creating the Sound Frames')
-	sound = AudioSegment.from_mp3(vid[num])
+	sound = AudioSegment.from_mp3(sound_vid[num])
 	# 1 sec = 25 frames --> 1 frame = 1/25 sec
 	# 1 sec = 1000 msec
 	n = len(sound)
@@ -33,7 +33,7 @@ def make_sound_frames(num):
 		end = i+frame_len*BATCH_SIZE
 		part = sound[i:end]
 		name = 'frame'+str(count)+'.mp3'
-		part.export(path[num]+name, format='mp3')
+		part.export(sound_path[num]+name, format='mp3')
 		count += 1
 	return
 
@@ -57,13 +57,13 @@ def add_line(file_name, line):
 # At last it gets transformed with MFCC
 def create_features(num):
 	print('Strating to create the Sound Database')
-	n = num_frames[num]
+	n = sound_num_frames[num]
 	nfft = 256
 	inv = 1.0/nfft
 	sr = 22050
 
 	for i in range(n):
-		frame_name = path[num] + 'frame' + str(i+1000) + '.mp3'
+		frame_name = sound_path[num] + 'frame' + str(i+1000) + '.mp3'
 		frame, sr = lr.load(frame_name) # = tuple(array, sample rate)
 
 		# Apply Hamming Window
@@ -78,7 +78,7 @@ def create_features(num):
 
 		# Apply MFCC
 		final = lr.feature.mfcc(S=mel, sr=sr, n_mfcc=20)
-		add_line(target[num], final)
+		add_line(sound_target[num], final)
 	return
 
 

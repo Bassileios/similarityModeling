@@ -45,7 +45,25 @@ We wanted to try out different classifiers for this project and ended up with:
 - kNN
 - Decision Tree
 
-All from the SciKit-Learn library. Training and testing was done with 10-folded cross-validation. The clear winner was the decision tree with an accuracy of 92%, a precision of 79% and recall of 79%. A big problem for the classification was the very small number of occurrances of pigs inside the movies, which led to some experiments with the SVM that had an accuracy of 82%, which sounded great but a recall of only 1%. In this case the SVM simply assigned 0 to almost all of the samples, which would not be visible as the accuracy was still very high. Similarly kNN produced solid accuracies with very low values of recall. In this algorithm we used a k of 5, since eventhough the sample size was very high, using too many neighbors would mean that it is more likely to get disturbed by noise from the negative samples. A detailed statistic can be found with 150 entries for accuracy, precision and recall for each model in SVM.csv, kNN.csv and DecTree.csv.
+All from the SciKit-Learn library. Training and testing was done with 10-folded cross-validation. The clear winner was the decision tree with an accuracy of 92%, a precision of 77% and recall of 77%. A big problem for the classification was the very small number of occurrances of pigs inside the movies, which led to some experiments with the SVM that had an accuracy of 82%, which sounded great but a recall of only 1%. In this case the SVM simply assigned 0 to almost all of the samples, which would not be visible as the accuracy was still very high. Similarly kNN produced solid accuracies with very low values of recall. In this algorithm we used a k of 5, since eventhough the sample size was very high, using too many neighbors would mean that it is more likely to get disturbed by noise from the negative samples. A detailed statistic can be found with 150 entries for accuracy, precision and recall for each model in result_SVM.csv, result_kNN.csv and result_DecTree.csv.
+
+These experiments were conducted on 30% of the overall database consisting of all three datasets. Averaging the experiments shows the following results:
+
+Linear SVM:
+- Accuracy: 0.728
+- Precision: 0.242
+- Recall: 0.223
+
+kNN:
+- Accuracy: 0.83
+- Precision: 0.561
+- Recall: 0.306
+
+Decision Tree:
+- Accuracy: 0.916
+- Precision: 0.769
+- Recall: 0.77
+
 
 ## Conclusion
 The very good result with the decision tree model was very exciting for us, since it was hard for us to see whether our tests and analyses were correct and would lead to a sufficiently good model. The most tedious part of our work was definitely the experiments with different textures and colors, as well as the error handling of the optical flow method. While it was definitely the most interesting part of this project, finding out how speech recognition works was by far the hardest to get a grasp on.

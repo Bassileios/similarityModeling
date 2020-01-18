@@ -49,7 +49,7 @@ def safe_results(file_name, acc, prec, rec):
 # Main Procedure, Trains three Models and Creates a Statistic
 def main():
 	print('Loading in Datasets')
-	statistic = ['SVM.csv', 'kNN.csv', 'DecTree.csv']
+	statistic = ['result_SVM.csv', 'result_kNN.csv', 'result_DecTree.csv']
 	data = load_data(0)
 	data += load_data(1)
 	data += load_data(2)
