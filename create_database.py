@@ -1,117 +1,182 @@
-
-
-# Plan
-# 1. Daten
-# 2. OpenCV herunterladen
-# 3. Techniken
-	# Farbe: OpenCV -> Color Histogram
-	# Textur: OpenCV -> Filter (?)
-	# Stimme: ???
-	# Bewegungen: OpenCV -> Optical Flow
-	# Umriss: ???
-# 4. Erzeuge aus Video Frames
-	# Aus Gruppen von 5 Frames [x-4:x]
-	# Anzahl rosa Pixel
-	# Anzahl gefundener Muster
-	# Bewegungsdifferential -> check
-	# PCA der Stimme
-# 5. Train Model
-
-
 import cv2
-import pandas as pd
 import numpy as np
 import mahotas as mt
 import math
-from PIL import Image
 
+
+# Finds the Number of pixels in the Picture of Flesh-like Color
 def find_flesh(img):
-	#im = np.array(img.convert('RGB')) #np.array(Image.open("p.png").convert('RGB'))
-	sought = []
+	sought = [[58,95,147],[59,96,148],[88,118,173],[89,119,174],[90,120,175],[91,121,176],[92,122,177],[93,123,178],[94,124,179],[97,122,178],[109,141,194],[110,142,195],[111,143,196],[112,144,197],[113,145,198],[114,146,199],[115,147,200],[116,148,201],[117,149,202],[118,150,203],[119,151,204],[147,191,254],[148,192,255],[150,194,255],[152,196,255]]
 	result = 0
 	for i in range(len(sought)):
 		result += np.count_nonzero(np.all(img==sought[i],axis=2))
 	return result
 
 
+# Applies the Haralick Texture Detection Method
 def find_texture(img):
 	text = mt.features.haralick(img)
 	mean = text.mean(axis=0)
 	return mean
 
 
+# Reads in the Labels and Frame Names
 def prepare(file_path, prefix, suffix):
 	with open(file_path, 'r') as file:
-		n = 10 #sum(1 for line in file)
-		data = [('',0)]*n
+		#n = sum(1 for line in file)
+		data = []
 		line = file.readline().strip().split()
-		for i in range(16000): line = file.readline().strip().split()
-		for i in range(n):
-			data[i] = (prefix +line[0]+suffix, int(line[1]))
+		#for i in range(16000): line = file.readline().strip().split()
+		count = 0
+		while len(line) == 2:
+			data.append((prefix +line[0]+suffix, int(line[1])))
 			line = file.readline().strip().split()
 		return data
+
+
+# Adds one Sample to the Database
+def add_line(file_name, line):
+	with open(file_name, 'a') as file:
+		string = ''
+		for i in range(len(line)):
+			string += str(line[i])
+			if i != len(line)-1: string += '\t'
+		string += '\n'
+		file.write(string)
+	return
+
+
+# If the Creation of the database gets interrupted, this method returns the frame that was last worked on
+def check_status(file_name):
+	with open(file_name, 'r') as file:
+		return sum(1 for line in file)
 		
 
 
-def main():
+# Main Procedure for Feature Extraction of the Pictures
+# 5 Frames are concurrently read in and processed
+def build_db(num):
+	print('Reading in the data')
 	# Data = DB with picture names and labels
-	data = prepare('Muppets_03_04_03_pig.txt', 'Muppets-03-04-03/', '.jpg') # data is now an array of pictures with labels
+	db = ['Muppets_03_04_03_pig.txt','Muppets_02_01_01_pig.txt','Muppets_02_04_04_pig.txt']
+	dire = ['Muppets-03-04-03/','Muppets-02-01-01/','Muppets-02-04-04/']
+	target = ['Muppets-03-04-03-video.csv', 'Muppets-02-01-01-video.csv', 'Muppets-02-04-04-video.csv']
+
+	data = prepare(db[num], dire[num], '.jpg') # data is now an array of pictures with labels
 
 	BATCH_SIZE = 5 # Number of frames that are looked at simulateneously
-	textures = [2,10,11,12]
+	textures = [2,4,7,8,10,12]
 
 	# Optical Flow parameters
 	of_params = dict(winSize = (30,20), maxLevel = 2, criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 	# ShiTomasi corner detection
 	corner_params = dict(maxCorners = 100, qualityLevel = 0.3, minDistance = 7, blockSize = 7 )
 
-	n = 10#len(data)	
+	start = 0#check_status('Muppets-03-04-03.csv')
+	n = len(data)
 
+	quarter = int(n/4)
+	half = int(n/2)
+	tquarter = int(3*n/4)
+
+	print('Starting the feature extraction')
 	# Start with creation of database
-	for i in range(n-BATCH_SIZE):
+	for i in range(start, n-BATCH_SIZE):
+		if i == quarter: print('25% Done!')
+		elif i == half: print('50% Done!')
+		elif i == tquarter: print('75% Done!')
+
 		# Next we want to work with the data
 		flesh = [0]*BATCH_SIZE
 		text = [0]*(BATCH_SIZE*len(textures))
-		motion = [0]*BATCH_SIZE
+		motion = []
 		image = cv2.imread(data[i][0])
 		label = data[i+BATCH_SIZE][1]
 		old = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 		tracking = cv2.goodFeaturesToTrack(old, mask = None, **corner_params)
 		tex_count = 0
+		none_flag = False
+
 		# Each frame also calculates the next BATCH_SIZE frames as well
 		for j in range(BATCH_SIZE):
-			gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+			new = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
 			# - Find number of flesh pixels
 			flesh[j] = find_flesh(image)
+
 			# - Find Textur occurrances in pictures
-			texture = find_texture(gray)
+			texture = find_texture(new)
 			for t in textures:
 				text[tex_count] = texture[t]
 				tex_count += 1
 			
 			# - Find Motion Flow
-			if isinstance(tracking,np.ndarray):
-				points, st, err = cv2.calcOpticalFlowPyrLK(old, gray, tracking, None, **of_params)
-				motion[j] = points[st==1]
-				old = gray.copy()
-				tracking = motion[j].reshape(-1,1,2)
+			if isinstance(tracking,np.ndarray) and not none_flag:
+				points, st, err = cv2.calcOpticalFlowPyrLK(old, new, tracking, None, **of_params)
+				if isinstance(points,type(None)): none_flag = True
+				else:
+					points = points[st==1]
+					motion.append(points)
+					old = new.copy()
+					tracking = points.reshape(-1,1,2)
+
+			# - Next picture
 			if j != BATCH_SIZE-1: image = cv2.imread(data[i+j+1][0])
 
 		# Analyze the flow of movement
 		movement = [0]*(BATCH_SIZE-1)
-		if isinstance(tracking,np.ndarray):
-			for m in range(len(motion[0][0])):
-				for j in range(BATCH_SIZE-1):
+		if isinstance(tracking,np.ndarray) and np.shape(motion[0])[0] != 0:
+			for m in range(len(motion[0])):
+				for j in range(len(motion)-1):
+					if len(motion[j+1]) <= m: break
 					diff_x = motion[j][m][0] - motion[j+1][m][0]
 					diff_y = motion[j][m][1] - motion[j+1][m][1]
 					movement[j] = math.sqrt(diff_x*diff_x + diff_y*diff_y)
 
-		print('Flesh:',flesh,'text:',text,'motion:',movement, 'Label:', label)
+		#print('Flesh:',flesh,'text:',text,'motion:',movement, 'Label:', label)
+		line = [data[i+BATCH_SIZE][0]] + flesh + text + movement
+		line.append(label)
+		add_line(target[num], line)
+
+	print('Successfully created the database!')
+	return
 
 
 
+#########################
+# UTILITY and DEBUGGING #
+#########################
+
+# Helper Method
+# There was an issue with the labels, so we had to reapply them to the DB instead of recalculating everything
+def fix_dbs():
+	print('Fixing Procedure')
+	target = ['Muppets-03-04-03-video.csv', 'Muppets-02-01-01-video.csv', 'Muppets-02-04-04-video.csv']
+	new_target = ['Muppets-03-04-03-fixed.csv', 'Muppets-02-01-01-fixed.csv', 'Muppets-02-04-04-fixed.csv']
+	db = ['Muppets-03-04-03_pig.txt','Muppets-02-01-01_pig.txt','Muppets-02-04-04_pig.txt']
+	
+	for d in range(3):
+		X = open(target[d],'r')
+		y = open(db[d],'r')
+		line_x = X.readline().strip().split()
+		line_y = y.readline().strip().split()
+		while len(line_x) > 5:
+			line = line_x[0:len(line_x)-1]
+			line.append(line_y[1])
+			add_line(new_target[d], line)
+			line_x = X.readline().strip().split()
+			line_y = y.readline().strip().split()
+	return
+
+
+# Helper Method
+# Used to see which Features of Color and Texture were the best for Classification
 def analyse_mp():
-	pictures = ['miss_piggy_1.jpg','miss_piggy_2.jpg','miss_piggy_3.jpg']
+	#pictures = ['miss_piggy_cropped_1.jpg','miss_piggy_cropped_2.jpg','miss_piggy_cropped_3.jpg']
+	pictures = ['miss_piggy_color_1.jpg','miss_piggy_color_2.jpg','miss_piggy_color_3.jpg']
+
+	### TESTING PIG TEXTURES ###
+	print('Testing Textures')
 	text = [0,0,0]
 	for i in range(3):
 		image = cv2.imread(pictures[i])
@@ -122,15 +187,51 @@ def analyse_mp():
 		total[i] = math.sqrt((text[0][i]-text[1][i])*(text[0][i]-text[1][i]) + (text[1][i]-text[2][i])*(text[1][i]-text[2][i]) + (text[0][i]-text[2][i])*(text[0][i]-text[2][i]))
 		total[i] /= max(text[0][i],text[1][i],text[2][i])
 	print(total)
-	# Analysis shows that in all three pictures haralick features 2,10,11,12 are almost exactly the same
-	print(text[0][2],text[0][10],text[0][11],text[0][12])
-	print(text[1][2],text[1][10],text[1][11],text[1][12])
-	print(text[2][2],text[2][10],text[2][11],text[2][12])
-	
+	# Analysis shows that in all three pictures haralick features 2,4,7,8,10,12 are almost exactly the same in all samples
+	#print(text[0][2],text[0][4],text[0][7],text[0][8],text[0][10],text[0][12])
+	#print(text[1][2],text[1][4],text[1][7],text[1][8],text[1][10],text[1][12])
+	#print(text[2][2],text[2][4],text[2][7],text[2][8],text[2][10],text[2][12])
+	#image = cv2.imread('Muppets-03-04-03/frame1800.jpg')
+	#print(find_texture(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)))
+	#print(text[0])
 
-analyse_mp()
+	### TESTING COLORS OF PIGS ###
+	print('Testing Colors')
 
-#main()
+	rgb = np.array([[255,255,255]])
+	for i in range(3):
+		image = cv2.imread(pictures[i])
+		rgb = np.concatenate((rgb, image.reshape(-1, image.shape[-1])), axis = 0)
+
+	colors = np.unique(rgb, axis=0, return_counts = True)
+	num_pix = sum(colors[1])
+	pruned_col = [[],[]]
+
+	for i in range(len(colors[1])):
+		if colors[1][i] > 50 and colors[1][i] < 500: # get pink while avoiding white
+			pruned_col[0].append(colors[0][i])
+			pruned_col[1].append(colors[1][i])
+
+	print(pruned_col[1])
+
+	show = np.zeros((1,len(pruned_col[0]),3), np.uint8)
+	for i in range(len(pruned_col[0])):
+		show[0][i][0] = pruned_col[0][i][0]
+		show[0][i][1] = pruned_col[0][i][1]
+		show[0][i][2] = pruned_col[0][i][2]
+
+	cv2.imwrite('pixels.png', show)
+	final = ''
+	for i in range(len(pruned_col[0])):
+		final += '[{},{},{}],'.format(show[0][i][0],show[0][i][1],show[0][i][2])
+	print(final)
+	return
 
 
+# Main Method, creates all the Databases
+def main():
+	for i in range(3):
+		print('Building Database',i)
+		build_db(i)
+	return
 

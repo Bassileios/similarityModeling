@@ -1,6 +1,18 @@
 # Folders with uncompressed frames
 data/
 */logs/
+Muppets-02-01-01/
+Muppets-03-04-03/
+Muppets-02-04-04/
+Muppets-02-01-01-sound/
+Muppets-03-04-03-sound/
+Muppets-02-04-04-sound/
+Muppets-02-01-01.avi
+Muppets-03-04-03.avi
+Muppets-02-04-04.avi
+Muppets-02-01-01.mp3
+Muppets-03-04-03.mp3
+Muppets-02-04-04.mp3
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
