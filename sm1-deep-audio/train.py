@@ -15,13 +15,13 @@ test_path = '../data/kermit-sound-test/'
 # The classes correspond to directory names under ../train/audio
 CLASS_NAMES = ['0', '1']
 
-MODEL_NAME = 'model-1'
+MODEL_NAME = 'model-7'
 
 window_size = .02
 window_stride = .01
 window_type = 'hamming'
 normalize = True
-max_len = 101
+max_len = 100
 batch_size = 64
 log_dir = "logs/fit/" + MODEL_NAME + datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
@@ -35,6 +35,7 @@ def main():
                                              window_type=window_type,
                                              normalize=normalize,
                                              max_len=max_len,
+                                             logit=False,
                                              classes=CLASS_NAMES,
                                              shuffle=True,
                                              seed=123)
@@ -49,18 +50,18 @@ def main():
         axarr[int(i / 3), i % 3].imshow(X[i, ..., 0], cmap='gray')
         axarr[int(i / 3), i % 3].set_title(CLASS_NAMES[np.argmax(y[i])])
     plt.show()
+    print(train_iterator.image_shape)
 
     model = get_model(train_iterator.image_shape, len(CLASS_NAMES))
 
     model.fit(train_iterator,
               steps_per_epoch=np.ceil(train_iterator.n / batch_size),
-              epochs=10,
-              verbose=1,
+              epochs=5,
               callbacks=[tensorboard_callback])
 
     model.save('model/' + MODEL_NAME)
 
-    test_iterator = SpeechDirectoryIterator(directory=train_path,
+    test_iterator = SpeechDirectoryIterator(directory=test_path,
                                             batch_size=batch_size,
                                             window_size=window_size,
                                             window_stride=window_stride,
