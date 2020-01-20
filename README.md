@@ -68,6 +68,7 @@ The training was done in two steps:
 Transfer learning helped to reduce the training time by a huge factor, we only needed 15 mins.
 ##### Results
 model-8-fineTuned on all the data:
+
 | Classes      | precision | recall | f1-score | support |
 |--------------|-----------|--------|----------|---------|
 | 1            | 0.96      | 0.99   | 0.98     | 6265    |
@@ -75,7 +76,9 @@ model-8-fineTuned on all the data:
 | accuracy     |           |        | 0.99     | 23184   |
 | macro avg    | 0.98      | 0.99   | 0.98     | 23184   |
 | weighted avg | 0.99      | 0.99   | 0.99     | 23184   |
+
 model-8-fineTuned on test data:
+
 | Classes      | precision | recall | f1-score | support |
 |--------------|-----------|--------|----------|---------|
 | 1            | 0.86      | 0.95   | 0.90     | 1253    |
@@ -90,6 +93,7 @@ We can see that the results using transfer learning are very good, except the ca
 In this part, we were inspired by [SincNet](https://arxiv.org/abs/1808.00158) paper to use Convolution neural networks to classify raw audio files. we applied Fourier transform on the tracks to get a spectrum (The STFT represents a signal in the time-frequency domain by computing discrete Fourier transforms (DFT) over short overlapping windows) then we get used the magPhase function from librosa to separate the spectrogram into its magnitude and phase components, this results in a 2D array which can be seen as an image.
 We have tested multiple configuration and hyperparameters for the neural networks, but we did not accomplish good results comparing to the video DL, we think that issue is related to the labeling of the tracks and the background noise when Kermit is speaking.
 ##### Results
+
 | Classes      | precision | recall | f1-score | support |
 |--------------|-----------|--------|----------|---------|
 | 1            | 0.84      | 0.83   | 0.83     | 523     |
@@ -97,6 +101,7 @@ We have tested multiple configuration and hyperparameters for the neural network
 | accuracy     |           |        | 0.96     | 3875    |
 | macro avg    | 0.96      | 0.96   | 0.96     | 3875    |
 | weighted avg | 0.91      | 0.90   | 0.90     | 3875    |
+
 ### SM2
 #### Video Features  
 We created a batch of 5 frames to be analyzed as one sample, like a sliding window. For each Frame we calculated:  
@@ -145,7 +150,7 @@ The very good result with the decision tree model was very exciting for us since
 
 
 ## Resources and References
-[SincNet paper](https://arxiv.org/abs/1808.00158) Speaker Recognition from Raw Waveform with SincNet
-[SincNet](https://github.com/mravanelli/SincNet) Implementation
-[A Gentle Introduction to Transfer Learning for Deep Learning](https://machinelearningmastery.com/transfer-learning-for-deep-learning/) 
-[VGG16](https://cv-tricks.com/cnn/understand-resnet-alexnet-vgg-inception/)  Understanding various architectures of Convolutional Networks
+- [SincNet paper](https://arxiv.org/abs/1808.00158) Speaker Recognition from Raw Waveform with SincNet
+- [SincNet](https://github.com/mravanelli/SincNet) Implementation
+- [A Gentle Introduction to Transfer Learning for Deep Learning](https://machinelearningmastery.com/transfer-learning-for-deep-learning/) 
+- [VGG16](https://cv-tricks.com/cnn/understand-resnet-alexnet-vgg-inception/)  Understanding various architectures of Convolutional Networks
