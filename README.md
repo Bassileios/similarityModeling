@@ -19,11 +19,11 @@ Implementation of Similarity Modeling Projects  by Nikolaus Funk and Bassel Mahm
 - The rest of the requirements are defined in requirnment.txt
   
 ## 3. Usage
-### 3.1 SM1: Deep Learning approach
+### 3.1. SM1: Deep Learning approach
 The sources and scripts for visual-based DL and auditory based DL can be found in sm1-deep-video and sm1-deep-audio respectively.
 To be able to run the following script the videos and label data should be in the data folder. We recommend  to create a separate python environment and install the requirement using
 `pip install -r requirements.txt`
-#### Visual DL
+#### 3.1.1. Visual DL
 
 - helpers/generateFrames.py: will extract 5 frames per seconds
 - model1.py: the used model with no regulation, which caused the model to overfit.
@@ -34,7 +34,7 @@ To be able to run the following script the videos and label data should be in th
 To run the training/evaluating, run one the following command after importing the labeled data to the data folder
 `python train.py` or `python evaluate.py`
 
-####  auditory DL
+#### 3.1.2. auditory DL
 - helpers/audioloader.py: extend the Iterator class from Keras, which will load the audio tracks and precess them to get a spectrogram using Librosa.
 - helpers/create_sounds.py: will extract the audio from the video and split it into 1 second overlapped tracks. The labeling was done by hand with the use of the labeling function in [Audacity](https://www.audacityteam.org/)
 - model.py: contains the model definition, we used 3 Conv2d layers with 2 fully connected layers.
@@ -45,7 +45,7 @@ To run the training/evaluating, run one the following command after importing th
 
 The trained models for both approaches can be downloaded from:
 [Dropbox shared folder to the models](https://www.dropbox.com/sh/8npr9lwuk7wb3ey/AADF3qOmkRHtnO2Xx0oh7h9ia?dl=0)
-### 3.2 SM2: Classical approach
+### 3.2. SM2: Classical approach
 The implementation is located in sm2-classical folder.
 This Project is split into  
 - create_frames.py: Extracts the frames from the video data  
@@ -57,9 +57,9 @@ This Project is split into
   
 To classify running classify_data.py should be sufficient, as the other files are only dedicated to the creation of the database that is already handed in together with the implementation.  
   
-## Techniques and Experiments
-### SM1
-#### Video DL
+## 4. Techniques and Experiments
+### 4.1. SM1
+#### 4.1.1. Video DL
 In the visual approach, we used transfer learning since the amount of data is relatively small. We imported the pre-trained Conv layers from VGG16 network to use as feature extraction, after those layers, three fully connected layers were added to perform the classification.
 Data preprocessing: 5 frames/second were extracted from the videos and labeled, after that, we used the same preprocessing that is done in VGG16 since we used the same first 20 layers.
 The training was done in two steps:
@@ -89,7 +89,7 @@ model-8-fineTuned on test data:
 
 We can see that the results using transfer learning are very good, except the case of precision when Kermit is visible in the frame, it dropped to 0.86. We think the reason for that is the low quality of the video and the motion blur that is highly visible when transitioning from frame to frame.
 
-#### Audio DL
+#### 4.1.2. Audio DL
 In this part, we were inspired by [SincNet](https://arxiv.org/abs/1808.00158) paper to use Convolution neural networks to classify raw audio files. we applied Fourier transform on the tracks to get a spectrum (The STFT represents a signal in the time-frequency domain by computing discrete Fourier transforms (DFT) over short overlapping windows) then we get used the magPhase function from librosa to separate the spectrogram into its magnitude and phase components, this results in a 2D array which can be seen as an image.
 We have tested multiple configuration and hyperparameters for the neural networks, but we did not accomplish good results comparing to the video DL, we think that issue is related to the labeling of the tracks and the background noise when Kermit is speaking.
 ##### Results
@@ -102,8 +102,8 @@ We have tested multiple configuration and hyperparameters for the neural network
 | macro avg    | 0.96      | 0.96   | 0.96     | 3875    |
 | weighted avg | 0.91      | 0.90   | 0.90     | 3875    |
 
-### SM2
-#### Video Features  
+### 4.2. SM2
+#### 4.2.1. Video Features  
 We created a batch of 5 frames to be analyzed as one sample, like a sliding window. For each Frame we calculated:  
 - Number of pixels that are colored like a pig  
 - The texture of the image with selected Haralick features  
@@ -111,10 +111,10 @@ We created a batch of 5 frames to be analyzed as one sample, like a sliding wind
   
 For the pig colors, we first analyzed pictures of Miss Piggy and selected the 20 most common color values in different lighting environments. This was done in the analyse_mp() method in create_database.py together with an analysis of the Haralick features. Since we wanted to keep the information in the distribution of each value, each feature or set of features occurs five times in a row. As the usual Haralick features count 13 different features, we selected only 7 that were analyzed experimentally. The optical flow was calculated by first applying edge detection to find points that were easy to track. These points were updated in each iteration. From each picture to the next we calculated the movement vectors and added the absolute length of them. This makes four values to determine how fast a picture is.  
   
-#### Audio Features  
+#### 4.2.2. Audio Features  
 As written earlier, the soundtrack was split into multiple 'frames' of 200 milliseconds. Each frame was then first transformed with the fast Fourier transformation to get the power levels. We used 256 points for this purpose. Afterward, we created the MEL frequency bank with 40 bins and applied it to the power levels. The spectrum was then transformed back with MEL-frequency Cepstral Coefficients with a target of 20 values.  
   
-#### Classification  
+#### 4.2.3. Classification  
 We wanted to try out different classifiers for this project and ended up with:  
 - Linear SVM  
 - KNN  
@@ -141,15 +141,15 @@ Decision Tree:
   
   
 
-## Conclusion
+## 5. Conclusion
 The obvious result is DL produced better results than classical methods with less time and easier implementation.
-### SM1
+### 5.1. SM1
 The interesting part of the video DL that, we have used transfer learning, which proved to be efficient when having a small dataset and reducing the training time, which helped to test multiple configurations quickly. The Audio DL helped us understand Fourier transform, additionally how to use convolutional neural networks with audio data.
-### SM2 
+### 5.2. SM2 
 The very good result with the decision tree model was very exciting for us since it was hard for us to see whether our tests and analyses were correct and would lead to a sufficiently good model. The most tedious part of our work was the experiments with different textures and colors, as well as the error handling of the optical flow method. While it was the most interesting part of this project, finding out how speech recognition works were by far the hardest to get a grasp on.
 
 
-## Resources and References
+## 6. Resources and References
 - [SincNet paper](https://arxiv.org/abs/1808.00158) Speaker Recognition from Raw Waveform with SincNet
 - [SincNet](https://github.com/mravanelli/SincNet) Implementation
 - [A Gentle Introduction to Transfer Learning for Deep Learning](https://machinelearningmastery.com/transfer-learning-for-deep-learning/) 
