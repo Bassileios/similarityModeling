@@ -24,7 +24,7 @@ batch_size = 64
 
 def main():
     # loading the trained model
-    my_model = tf.keras.models.load_model('model/model-6-test')
+    my_model = tf.keras.models.load_model('model/model-6')
     my_model.summary()
 
     test_iterator = SpeechDirectoryIterator(directory=test_path,
