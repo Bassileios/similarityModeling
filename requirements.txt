@@ -47,7 +47,7 @@ decorator==4.4.0
 defusedxml==0.6.0
 dill==0.3.0
 distributed==2.1.0
-Django==3.0.2
+Django==3.0.14
 docutils==0.14
 ds-lime==0.1.1.27
 entrypoints==0.3
