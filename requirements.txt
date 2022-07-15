@@ -46,7 +46,7 @@ dask==2.0.0
 decorator==4.4.0
 defusedxml==0.6.0
 dill==0.3.0
-distributed==2.1.0
+distributed==2021.10.0
 Django==3.0.2
 docutils==0.14
 ds-lime==0.1.1.27
